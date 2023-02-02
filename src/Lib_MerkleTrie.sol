@@ -5,7 +5,7 @@ pragma solidity ^0.8.9;
 import { Lib_BytesUtils } from "./Lib_BytesUtils.sol";
 import { Lib_RLPReader } from "./Lib_RLPReader.sol";
 import { Lib_RLPWriter } from "./Lib_RLPWriter.sol";
-import "forge-std/console.sol";
+
 /**
  * @title Lib_MerkleTrie
  */
@@ -70,7 +70,7 @@ library Lib_MerkleTrie {
         bytes memory _value,
         bytes memory _proof,
         bytes32 _root
-    ) internal view returns (bool _verified) {
+    ) internal pure returns (bool _verified) {
         (bool exists, bytes memory value) = get(_key, _proof, _root);
 
         return (exists && Lib_BytesUtils.equal(_value, value));
@@ -88,9 +88,8 @@ library Lib_MerkleTrie {
         bytes memory _key,
         bytes memory _proof,
         bytes32 _root
-    ) internal view returns (bool _exists, bytes memory _value) {
+    ) internal pure returns (bool _exists, bytes memory _value) {
         TrieNode[] memory proof = _parseProof(_proof);
-        console.log("Parsed Proof");
         (uint256 pathLength, bytes memory keyRemainder, bool isFinalNode) = _walkNodePath(
             proof,
             _key,
@@ -125,7 +124,7 @@ library Lib_MerkleTrie {
         bytes32 _root
     )
         private
-        view
+        pure
         returns (
             uint256 _pathLength,
             bytes memory _keyRemainder,
@@ -144,8 +143,7 @@ library Lib_MerkleTrie {
         for (uint256 i = 0; i < _proof.length; i++) {
             currentNode = _proof[i];
             currentKeyIndex += currentKeyIncrement;
-            console.log("Current Node:");
-            console.logBytes(currentNode.encoded);
+
             // Keep track of the proof elements we actually need.
             // It's expensive to resize arrays, so this simply reduces gas costs.
             pathLength += 1;
@@ -161,9 +159,6 @@ library Lib_MerkleTrie {
                 );
             } else {
                 // Nodes smaller than 31 bytes aren't hashed.
-                console.log("Current NodeID:");
-                console.logBytes32(currentNodeID);
-                console.logBytes32(Lib_BytesUtils.toBytes32(currentNode.encoded));
                 require(
                     Lib_BytesUtils.toBytes32(currentNode.encoded) == currentNodeID,
                     "Invalid internal node hash"
@@ -191,9 +186,7 @@ library Lib_MerkleTrie {
                 bytes memory pathRemainder = Lib_BytesUtils.slice(path, offset);
                 bytes memory keyRemainder = Lib_BytesUtils.slice(key, currentKeyIndex);
                 uint256 sharedNibbleLength = _getSharedNibbleLength(pathRemainder, keyRemainder);
-                console.log("Path remeainder: %d", pathRemainder.length);
-                console.log("Key remeainder: %d", keyRemainder.length);
-                console.log("Shared nibble length: %d", sharedNibbleLength);
+
                 if (prefix == PREFIX_LEAF_EVEN || prefix == PREFIX_LEAF_ODD) {
                     if (
                         pathRemainder.length == sharedNibbleLength &&
@@ -202,9 +195,8 @@ library Lib_MerkleTrie {
                         // The key within this leaf matches our key exactly.
                         // Increment the key index to reflect that we have no remainder.
                         currentKeyIndex += sharedNibbleLength;
-                        console.log("Finished");
                     }
-                    console.log("Test");
+
                     // We've hit a leaf node, so our next node should be NULL.
                     currentNodeID = bytes32(RLP_NULL);
                     break;
@@ -240,14 +232,11 @@ library Lib_MerkleTrie {
      * @param _proof RLP-encoded proof to parse.
      * @return _parsed Proof parsed into easily accessible structs.
      */
-    function _parseProof(bytes memory _proof) private view returns (TrieNode[] memory _parsed) {
+    function _parseProof(bytes memory _proof) private pure returns (TrieNode[] memory _parsed) {
         Lib_RLPReader.RLPItem[] memory nodes = Lib_RLPReader.readList(_proof);
-        console.log("Read proof list");
         TrieNode[] memory proof = new TrieNode[](nodes.length);
 
         for (uint256 i = 0; i < nodes.length; i++) {
-            console.log("Reading bytes");
-            console.logBytes(Lib_RLPReader.readRawBytes(nodes[i]));
             bytes memory encoded = Lib_RLPReader.readBytes(nodes[i]);
             proof[i] = TrieNode({ encoded: encoded, decoded: Lib_RLPReader.readList(encoded) });
         }
