@@ -3,29 +3,10 @@ import rlp
 import itertools
 from mpt.hash import keccak_hash
 
-"""
-target = rlp.encode([b'\x20', bytes([0]*28)])
-print(len(target))
-print(target)
-value = bytes.fromhex("000000000000000000000000000000000000000000000000")+bytes.fromhex("16358525")
-print(len(value))
-#value = None
-if value is None:
-    i = 0
-    for s in itertools.product(range(256), repeat=29):
-        if i % (1 << 22) == 0:
-            print(f"Searching: {int(100*i / (1 << 32))}%", sep='', end='\r')
-        i += 1
-        h = keccak_hash(rlp.encode([b'\x20', bytes(s)]))
-        if h.startswith(target[:3]) and h[-1] == 0:
-            print(bytes(s).hex())
-            print(rlp.decode(h))
-            value = bytes(s)
-"""
+# Output of forgery.c
+leaf = rlp.decode(bytes.fromhex("df209d000000000000000000000000000000000000000000516b758b00000000"))
+value = leaf[1]
 
-
-value = bytes.fromhex("000000000000000000000000000000000000000000516b758b00000000")
-assert rlp.encode([b'\x20', bytes(value)]) == bytes.fromhex("df209d") + value
 proof_node = rlp.decode(keccak_hash(rlp.encode([b'\x20', bytes(value)]))[:-1])
 assert(len(rlp.encode(proof_node)) == 31)
 

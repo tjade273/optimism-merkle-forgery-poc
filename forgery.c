@@ -28,11 +28,7 @@ void *thread(void *nonce) {
         ((uint64_t*)candidate)[3]++;
         if ((uint64_t) nonce == 0){
             if ((((uint64_t*)candidate)[3] & 0xffffff) == 0) {
-                printf("Checked ");
-                for (unsigned int i = 0; i < 32; i++) {
-                    printf("%02x", candidate[i]);
-                }
-                printf("\n");
+                printf("Checked %08llx\n", ((uint64_t*)candidate)[3]);
             }
         }
     }
@@ -40,11 +36,7 @@ void *thread(void *nonce) {
     for (unsigned int i = 0; i < 32; i++) {
         printf("%02x", candidate[i]);
     }
-    printf("\n");
-    keccak_init(&ctx);
-    keccak_update(&ctx, candidate, NODE_LEN);
-    keccak_final(&ctx, hash);
-    printf("Hash: ");
+    printf("\nHash: ");
     for (unsigned int i = 0; i < 32; i++) {
         printf("%02x", hash[i]);
     }
